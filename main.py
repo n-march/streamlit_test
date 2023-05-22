@@ -4,6 +4,13 @@ import matplotlib.pyplot as plt
 import streamlit as st
 from data_generator import related_people, related_entities, related_leaders
 
+try:
+    # Access the session state object, creating a new one if necessary
+    session_state = st.session_state
+except AttributeError:
+    # Create a new session state object
+    session_state = st._legacy_set_session_state()
+
 
 def main():
     # import data from data_generator
@@ -11,8 +18,23 @@ def main():
     entities_df = related_entities()
     leader_df = related_leaders()
 
-    # Create the dropdown to select the period
-    selected_period = st.selectbox("Select Period", ['All', 'Last week', 'Last month', 'Last 2 months'])
+    period_options = ['All', 'Last week', 'Last month', 'Last 2 months']
+
+    # Check if 'selected_period' is already in the session state
+    if 'selected_period' not in st.session_state:
+        # If not, initialize it
+        st.session_state.selected_period = period_options[0]
+
+    # Use the state in the selectbox
+    st.session_state.selected_period = st.selectbox(
+        "Select Period",
+        period_options,
+        index=period_options.index(st.session_state.selected_period)
+    )
+
+    # Update the session state with the new selected period
+    selected_period = st.session_state.selected_period
+    session_state.selected_period = selected_period
 
     if selected_period == 'All':
         filtered_people_df = people_df
@@ -27,6 +49,19 @@ def main():
     tab1, tab2 = st.tabs(["Insights", "Raw Data"])
 
     with tab1:
+
+        options_people = st.multiselect(
+            "Don't show me results for these people:",
+            people_df['Name'].unique().tolist())
+
+        options_entities = st.multiselect(
+            "Don't show me results for these entities:",
+            entities_df['Entities'].unique().tolist())
+
+        # Filter out the selected options
+        filtered_people_df = filtered_people_df[~filtered_people_df['Name'].isin(options_people)]
+        filtered_entities_df = filtered_entities_df[~filtered_entities_df['Entities'].isin(options_entities)]
+
 
         # ###### Related people mentioned barchart ######
         st.write("Related people mentioned")
@@ -74,7 +109,7 @@ def main():
         st.write("Related Individuals and their positions")
         st.write(filtered_leader_df)
 
-        # TODO: Lucy to add tables for themes
+        # TODO: Lucy to add tables for themes.
 
         st.write("Theme tables")
 
