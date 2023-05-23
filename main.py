@@ -77,6 +77,8 @@ def main():
         selected_person = st.selectbox("Select Person", filtered_people_df['Name'].unique())
 
 
+
+
         # TODO: this is not working. Ideally you'd be able to select one person of the above
         #  and see the evolution of "hits" in time
         if selected_person:
